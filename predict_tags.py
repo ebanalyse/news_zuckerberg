@@ -13,8 +13,6 @@ df = pandas.read_csv("~/news_zuckerberg.csv")
 
 tags = []
 
-df = df[:4]
-
 for i in range(len(df)):
     print(i)
     story = df.iloc[i]
@@ -30,6 +28,20 @@ for i in range(len(df)):
 
     tags.append(tag)
 
-with open('test.json', 'w') as fp:
-    json.dump(tags , fp)
+with open('topics.json', 'w') as fp:
+    json.dump(tags , fp, ensure_ascii = False)
     
+# antal artikler opdelt på brand og år
+
+from ebawsconnect.athena import get_query_results_from_athena
+query = """
+SELECT SUBSTRING(first_published, 1, 4) AS yr, cms_publication,
+COUNT(DISTINCT content_id) AS ANTAL
+FROM dfp_prod_jppol_dsa_shrd.escenic_article
+WHERE article_url NOT LIKE '/incoming%'
+AND cms_publication IN ('ekstrabladet', 'jyllandsposten', 'politiken')
+AND LENGTH(article_body) >= 100
+GROUP BY SUBSTRING(first_published, 1, 4), cms_publication
+ORDER BY cms_publication, yr
+"""
+out = get_query_results_from_athena(query, to_df = True, force_query = True, profile_name = "jppol-dfp")
