@@ -42,7 +42,7 @@ dubs = df %>%
   
 out = bind_rows(singles, dubs)
 
-write_csv(out, "artikeldata_zuckerberg.csv")
+write_csv(out, "news_zuckerberg.csv")
 
 
 
