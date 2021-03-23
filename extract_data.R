@@ -17,11 +17,18 @@ df = readr::read_csv("projects/zuckerberg.csv")
 # subset relevant publications
 df <- df %>% filter(cms_publication %in% c('ekstrabladet','politiken','jyllandsposten'))
 
+# filter stories without lead, title or body
+df <- df %>%
+  filter(!is.na(article_lead)) %>%
+  filter(!is.na(article_title)) %>%
+  filter(!is.na(article_body))
+  
 # exploratory
 df %>%
   mutate(year_lk = substr(first_published, 1, 4)) %>%
   group_by(year_lk) %>%
-  summarize(antal = n())
+  summarize(antal = n()) %>%
+  select(-antal)
 
 # handle unique content-ids
 singles = df %>% 
@@ -42,7 +49,15 @@ dubs = df %>%
   
 out = bind_rows(singles, dubs)
 
+year_pub = out %>%
+  mutate(year_lk = substr(first_published, 1, 4)) %>%
+  group_by(year_lk, cms_publication) %>%
+  summarize(antal = n())  %>%
+  arrange(cms_publication, year_lk)
+
 write_csv(out, "news_zuckerberg.csv")
+
+
 
 
 
