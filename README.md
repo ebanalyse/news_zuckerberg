@@ -1,5 +1,12 @@
 # Dataudtræk - Artikler om Mark Zuckerberg
 
+## Update 28. marts 2022
+
+- `extract_data.R` indeholder kode til at rense data
+- `clean_text.py` indeholder kode til at rengøre det rå tekstindhold i stamdata
+
+## Data
+
 Vedhæftet findes resultaterne af et dataudtræk fra JP/POLITIKENS HUS data lake af artikler, hvor 
 "Mark Zuckerberg" indgår.
 
