@@ -1,57 +1,57 @@
-# Dataudtræk - Artikler om Mark Zuckerberg
+# Extract, Transform and Load Data for Keywords
 
-Vedhæftet findes resultaterne af et dataudtræk fra JP/POLITIKENS HUS data lake af artikler, hvor 
-"Mark Zuckerberg" indgår.
+(Primitiv) funktionalitet til at lave et dataudtræk fra JP/POLITIKENS HUS data lake af artikler, hvor 
+bestemte keywords indgår.
+
+Dataudtrækket renses, formateres og eksporteres herefter til S3, hvorfra de potentielt
+kan deles internt og med eksterne forskere. 
+
+Seneste udtræk kan genereres ved at afvikle 'main-scriptet':
+
+```bash
+python -m etl_keywords.py
+```
+
+## Indhold af udtræk 
 
 Udtrækket har følgende komponenter:
 
-1. news_zuckerberg.csv: selve udtrækket af rådata for "Mark Zuckerberg"-artikler, i alt >1.500 artikler
-2. clean_texts.json: artikler fra 1., hvor selve teksten er forsøgt rengjort
-3. stories_count_brand_year.csv: et groft skøn over antallet af udgivne artikler opdelt på brand (jp/pol/eb) og år
-4. topics.json: prædikterede topics for artikler i 1 med EB's nuværende topic-model "Tabloid".
+1. "articles*.csv": En eller flere .csv-filer med artikel-data for de artikler, der er blevet trukket ud.
+2. "predictions*.csv": En eller flere .csv-filer med prædiktioner for de pågældende artikler fra relevante modeller (f.eks. Sentiment, Topic, NER).
 
-Herunder en række mere detaljerede oplysninger om de enkelte komponenter
+Herunder følger en række mere detaljerede oplysninger om de enkelte komponenter.
 
-## news_zuckerberg.csv
+## articles*.csv
 
-Dette er selve dataudtrækket, sådan som det ser ud i Ekstra Bladets kildesystemer, dvs. rådata. Datasættet
+Dette er artikel-dataudtrækket fra JP POLs kildesystemer. Datasættet
 er forsøgt renset, sådan at tabellen kun indeholder unikke artikler (dette er dog ikke lykkedes 100 procent).
 Hver række svarer til en artikel.
 
-Tabellen indeholder følgende felter med navne, der langt hen ad vejen fremstår selvforklarende:
-brand,sub_brand,cms_publication,section_id,content_id,article_url,article_title,article_lead,section_name,first_published,first_published_date,tag_scheme_term_array,tag_scheme_array,last_modified,article_body,cms_database,year,month
+Tabellen indeholder følgende felter med navne:
 
-Her et par eksempel:
-'cms_publication' angiver publikationens navn. 
-'content_id' er en unik identifikator for en artikel og svarer til en primærnøgle.
-'article_title', 'article_lead' og 'article_body' udgør tilsammen en artikels indhold.
-'article_url' indeholder url til artiklen.
-'section_name' indeholder navnet på den sektion, artiklen er rubriceret under.
+- content_id: en unik identifikator for en artikel og svarer til en **primærnøgle**.
+- article_title: artikel titel
+- article_lead: artikel rubrik
+- article_body: artikel brødtekst
+- clean_text: den samlede tekst i artiklen, der er forsøgt renset for diverse snavs (hyperlinks, specialtegn etc.).
+- first_published: tidspunkt for første publicering af artiklen.
+- article_url: url til originalartiklen.
 
-osv.
+## predictions*.csv:
 
-## clean_texts.json:
+Indeholder prædiktioner fra relevante modeller på de samme artikler i articles*.csv.
 
-Her er artiklerne fra news_zuckerberg.csv forsøgt rengjort ved at fjerne diverse huskumsnusk, specialtegn,
-HTML-kode m.v. fra det rå artikelindhold.
+Tabellerne skal content_id som primærnøgl, hvorved de herigennem kan kobles tilbage til artiklerne i articles*.csv.
 
-Artikelteksterne kan kobles til data i news_zuckerberg.csv vha. 'content_id'.
+Bortset fra det skal predictions*.csv for hver række indeholde relevant metadata for prædiktionerne et meningsfuldt format, der vil være forskelligt fra model til model. Det er op til de modelansvarlige for de enkelte modeller at definere og beskrive formatet.
 
-## stories_count_brand_year.csv
+I et simpelt eksempel som Sentiment Analysis vil formatet være:
 
-Af denne tabel fremgår et udtræk af antallet unikke artikler (content-id's) opdelt på brand og år.
-
-Dette tal er en proxy - groft estimat - for antallet af udgivne artikler opdelt på de forskellige medier.
-
-## topics.json
-
-Her er tabelleret de prædikterede topics for artiklerne i news_zuckerberg.csv med Ekstra Bladets Data
-Science teams seneste Topic-model, der går under navnet "Tabloid".
-
-De prædikterede topics kan kobles til artiklerne i news_zuckerberg.csv gennem 'content_id'.
-
-For en uddybende forklaring til disse prædiktioner henvises til Ekstra Bladets Data Science afdeling.
-
+| content_id | prediction |
+| --- | ------- | 
+| 123 | positiv |
+| 456 | neutral |
+| 789 | negativ |
 
 
 

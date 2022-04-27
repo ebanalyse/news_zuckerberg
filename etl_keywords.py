@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+import time
 
 import numpy as np
 from tqdm import tqdm
@@ -54,7 +55,6 @@ def lookup_articles(word:str="Mark Zuckerberg",
     AND (article_title LIKE '%{word}%'
     OR article_lead LIKE '%{word}%'
     OR article_body LIKE '%{word}%')
-    LIMIT 100
     """
     
      # NOTE: aws profile 'jppol-dfp' must be set
@@ -195,8 +195,19 @@ def extract_data_for_keyword(kw:str,
 def extract_data_for_keywords(keywords:list,
                               to_s3:bool=True,
                               s3_path:str="s3://externalresearch/lookupkeywords/persons.csv",
-                              **kwargs):
-    
+                              **kwargs) -> pd.DataFrame:
+    """Extract Data for Keywords and Write to S3
+
+    Args:
+        keywords (list): keywords to look up articles for.
+        to_s3 (bool, optional): Export to S3? Defaults to True.
+        s3_path (str, optional): Path to AWS S3 to export data to. 
+
+    Returns:
+        pd.DataFrame: Resulting articles in cleaned format.
+        
+    """
+      
     logger.info("Extracting data for keywords...")
     
     # extract data for all keywords    
@@ -218,9 +229,16 @@ def extract_data_for_keywords(keywords:list,
     return dfs 
 
 if __name__ == "__main__":
+    
+    # Complete ETL Job
+    
+    # PERSONS
+    t1 = time.time()
     s3_path = "s3://externalresearch/lookupkeywords/"
     persons_path = s3_path + "persons.csv"  
-    extract_data_for_keywords(keywords.PERSONS_DEMO, s3_path=persons_path)
+    extract_data_for_keywords(keywords.PERSONS, s3_path=persons_path)
+    t2 = time.time()
+    logger.info(f"Elapsed time: {t2-t1}")
 
 # def predict_text(pipeline, text):
 #     
