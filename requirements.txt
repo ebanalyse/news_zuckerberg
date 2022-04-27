@@ -1,0 +1,6 @@
+numpy
+tqdm
+pandas
+awswrangler
+boto3
+torch
