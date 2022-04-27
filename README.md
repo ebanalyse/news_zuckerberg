@@ -9,7 +9,13 @@ kan deles internt og med eksterne forskere.
 Seneste udtræk kan genereres ved at afvikle 'main-scriptet':
 
 ```bash
-python -m etl_keywords.py
+python -m etl_keywords
+```
+
+**NB**: Sørg for først at installere afhængigheder:
+
+```bash
+pip install -r requirements.txt
 ```
 
 ## Indhold af udtræk 

@@ -231,36 +231,59 @@ def extract_data_for_keywords(keywords:list,
 if __name__ == "__main__":
     
     # Complete ETL Job
+    S3_PATH = "s3://externalresearch/lookupkeywords/"
+    def process_keywords(kws,
+                         filepath):
+        t1 = time.time()
+        path = S3_PATH + filepath
+        df = extract_data_for_keywords(kws, s3_path=path)
+        t2 = time.time()
+        logger.info(f"Elapsed time: {t2-t1}")
+        return(df)
     
-    # PERSONS
-    t1 = time.time()
-    s3_path = "s3://externalresearch/lookupkeywords/"
-    persons_path = s3_path + "persons.csv"  
-    extract_data_for_keywords(keywords.PERSONS, s3_path=persons_path)
-    t2 = time.time()
-    logger.info(f"Elapsed time: {t2-t1}")
+    process_keywords(keywords.PERSONS,
+                     "persons.csv")
+    process_keywords(keywords.COMPANIES,
+                     "companies.csv")
+    process_keywords(keywords.OTHERS,
+                     "others.csv")
+    process_keywords(keywords.INFRASTRUCTURE,
+                     "others.csv")
+    process_keywords(keywords.SURVEILLANCE,
+                     "surveillance.csv")
+    
+    df = process_keywords(keywords.OTHERS,
+                     "articles_others.csv")
 
-# def predict_text(pipeline, text):
-#     
-#     labels = {'positiv': 1,
-#               'negativ': -1,
-#               'neutral': 0}
-#     
-#     sents = sent_tokenize(text)
-#     preds = pipeline(sents)
-#     preds_scores = [labels.get(x.get('label')) for x in preds]
-#     score = np.mean(preds_scores)
-#     
-#     return score
-# 
-# tokenizer = AutoTokenizer.from_pretrained("pin/senda")
-# model = AutoModelForSequenceClassification.from_pretrained("pin/senda")
-# quantized_model = torch.quantization.quantize_dynamic(
-#     model, {torch.nn.Linear}, dtype=torch.qint8
-# )
-# 
-# # create 'senda' sentiment analysis pipeline 
-# senda_pipeline = pipeline('sentiment-analysis', model=quantized_model, tokenizer=tokenizer)
-# 
-# sents = [predict_text(senda_pipeline, text) for text in tqdm(df.clean_text.values.tolist())]
+def predict_text(pipeline, text):
+    
+    labels = {'positiv': 1,
+              'negativ': -1,
+              'neutral': 0}
+    
+    sents = sent_tokenize(text)
+    preds = pipeline(sents)
+    preds_scores = [labels.get(x.get('label')) for x in preds]
+    score = np.mean(preds_scores)
+    
+    return score
 
+tokenizer = AutoTokenizer.from_pretrained("pin/senda")
+model = AutoModelForSequenceClassification.from_pretrained("pin/senda")
+quantized_model = torch.quantization.quantize_dynamic(
+    model, {torch.nn.Linear}, dtype=torch.qint8
+)
+
+# create 'senda' sentiment analysis pipeline 
+senda_pipeline = pipeline('sentiment-analysis', model=quantized_model, tokenizer=tokenizer)
+
+sents = [predict_text(senda_pipeline, text) for text in tqdm(df.clean_text.values.tolist())]
+
+def func(text):
+    preds = predict_text(senda_pipeline, text)
+    return preds
+
+import multiprocessing
+
+pool = multiprocessing.Pool(processes=4)
+pool.map(func, df.clean_text.values.tolist())
